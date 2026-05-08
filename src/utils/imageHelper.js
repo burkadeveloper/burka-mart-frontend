@@ -11,7 +11,9 @@ export const getImageUrl = (path) => {
   if (path.startsWith("http")) return path;
 
   // 1. Get the base URL and strip '/api' AND any trailing slash
-  const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:5000")
+  const baseUrl = (
+    import.meta.env.VITE_API_URL || "https://burka-mart-api.onrender.com"
+  )
     .replace("/api", "")
     .replace(/\/$/, ""); // Removes trailing slash if it exists
 

@@ -11,7 +11,7 @@ import {
   ThumbsDown,
   HelpCircle,
 } from "lucide-react";
-import axios from "axios";
+import api from "../api/axiosClient"; // Import the custom axios instance we fixed
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../utils/imageHelper";
 import { formatDistanceToNow } from "date-fns";
