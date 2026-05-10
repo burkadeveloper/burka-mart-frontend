@@ -99,14 +99,14 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             Admin Dashboard
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -114,8 +114,8 @@ export default function AdminDashboard() {
           </p>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Stats Grid – responsive columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <StatCard
             title="Total Users"
             value={stats.totalUsers || 0}
@@ -152,10 +152,10 @@ export default function AdminDashboard() {
 
         {/* Recent Orders Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex flex-wrap justify-between items-center gap-3">
+          <div className="px-4 md:px-6 py-4 md:py-5 border-b border-gray-200 dark:border-gray-700 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-blue-500" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
                 Recent Orders
               </h2>
             </div>
@@ -167,25 +167,25 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="min-w-[700px] w-full">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Order ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Buyer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -208,16 +208,16 @@ export default function AdminDashboard() {
                       key={order._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                     >
-                      <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">
+                      <td className="px-4 md:px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">
                         #{order._id.slice(-8)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-4 md:px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                         {order.buyer?.name || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
+                      <td className="px-4 md:px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
                         ETB {order.grandTotal?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             order.status === "delivered"
@@ -232,12 +232,12 @@ export default function AdminDashboard() {
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-4 md:px-6 py-4 text-sm text-gray-500">
                         {formatDistanceToNow(new Date(order.createdAt), {
                           addSuffix: true,
                         })}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 md:px-6 py-4 text-right">
                         <Link
                           to={`/admin/orders/${order._id}`}
                           className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm"
@@ -252,11 +252,11 @@ export default function AdminDashboard() {
             </table>
           </div>
           {ordersTotal > ordersLimit && !ordersLoading && (
-            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-center">
+            <div className="px-4 md:px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-center">
               <button
                 onClick={loadMoreOrders}
                 disabled={ordersFetching}
-                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium disabled:opacity-50"
               >
                 {ordersFetching ? (
                   "Loading..."
@@ -272,10 +272,10 @@ export default function AdminDashboard() {
 
         {/* Recent Products Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex flex-wrap justify-between items-center gap-3">
+          <div className="px-4 md:px-6 py-4 md:py-5 border-b border-gray-200 dark:border-gray-700 flex flex-wrap justify-between items-center gap-3">
             <div className="flex items-center gap-2">
               <Box className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
                 Newly Added Products
               </h2>
             </div>
@@ -287,28 +287,28 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="min-w-[800px] w-full">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Image
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Title
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Seller
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -331,23 +331,23 @@ export default function AdminDashboard() {
                       key={product._id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4">
                         <img
                           src={getImageUrl(product.images?.[0])}
                           alt={product.title}
                           className="w-10 h-10 rounded-md object-cover"
                         />
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      <td className="px-4 md:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                         {product.title}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-4 md:px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                         {product.seller?.name || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
+                      <td className="px-4 md:px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
                         ETB {product.price?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 md:px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             product.status === "active"
@@ -360,12 +360,12 @@ export default function AdminDashboard() {
                           {product.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-4 md:px-6 py-4 text-sm text-gray-500">
                         {formatDistanceToNow(new Date(product.createdAt), {
                           addSuffix: true,
                         })}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 md:px-6 py-4 text-right">
                         <Link
                           to={`/admin/products/${product._id}`}
                           className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm flex items-center justify-end gap-1"
@@ -380,11 +380,11 @@ export default function AdminDashboard() {
             </table>
           </div>
           {productsTotal > productsLimit && !productsLoading && (
-            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-center">
+            <div className="px-4 md:px-6 py-3 border-t border-gray-200 dark:border-gray-700 text-center">
               <button
                 onClick={loadMoreProducts}
                 disabled={productsFetching}
-                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium disabled:opacity-50"
               >
                 {productsFetching ? (
                   "Loading..."
@@ -402,7 +402,7 @@ export default function AdminDashboard() {
   );
 }
 
-// Enhanced Stat Card Component
+// Enhanced Stat Card Component (unchanged, but responsive)
 function StatCard({ title, value, icon: Icon, color, gradient, change }) {
   const colorMap = {
     blue: "from-blue-500/10 to-blue-600/5 border-blue-200 dark:border-blue-800",
@@ -417,14 +417,14 @@ function StatCard({ title, value, icon: Icon, color, gradient, change }) {
   return (
     <motion.div
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className={`bg-gradient-to-br ${colorMap[color]} bg-white dark:bg-gray-800 rounded-2xl shadow-md border p-6`}
+      className={`bg-gradient-to-br ${colorMap[color]} bg-white dark:bg-gray-800 rounded-2xl shadow-md border p-5 md:p-6`}
     >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
             {title}
           </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+          <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {value}
           </p>
           {change && (
@@ -434,9 +434,9 @@ function StatCard({ title, value, icon: Icon, color, gradient, change }) {
           )}
         </div>
         <div
-          className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-sm`}
+          className={`p-2 md:p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-sm`}
         >
-          <Icon className="w-6 h-6 text-white" />
+          <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
         </div>
       </div>
     </motion.div>

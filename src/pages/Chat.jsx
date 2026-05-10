@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "react-responsive";
 import { useSocket } from "../hooks/useSocket";
 import {
   useUserChats,
@@ -19,6 +20,7 @@ import {
   Image as ImageIcon,
   File,
   MessageCircle,
+  Menu,
 } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import toast from "react-hot-toast";
@@ -26,7 +28,6 @@ import { getImageUrl } from "../utils/imageHelper";
 import api from "../api/axiosClient";
 import { AnimatePresence, motion } from "framer-motion";
 
-// Lightbox component
 function Lightbox({ images, index, onClose }) {
   const [current, setCurrent] = useState(index);
   if (!images.length) return null;
@@ -71,7 +72,6 @@ function Lightbox({ images, index, onClose }) {
   );
 }
 
-// Placeholder components (you can replace with actual implementations)
 function FileAttachment({ onAttach }) {
   const inputRef = useRef();
   const handleFile = async (e) => {
@@ -180,6 +180,8 @@ export default function Chat() {
   const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [chatId, setChatId] = useState(null);
   const [localMessages, setLocalMessages] = useState([]);
@@ -196,7 +198,11 @@ export default function Chat() {
   const hasNavigatedRef = useRef(false);
 
   const { mutateAsync: getOrCreateChat } = useGetOrCreateChat();
-  const { data: chatsData, isLoading: chatsLoading } = useUserChats();
+  const {
+    data: chatsData,
+    isLoading: chatsLoading,
+    refetch: refetchChats,
+  } = useUserChats();
   const { data: messagesData, isLoading: messagesLoading } =
     useChatMessages(chatId);
   const { refetch: refetchUnread } = useTotalUnreadCount();
@@ -223,7 +229,6 @@ export default function Chat() {
           const newChatId = res.chat?._id || res._id;
           if (newChatId) {
             setChatId(newChatId);
-            // Update URL with new chatId
             navigate(
               `/chat/${otherUserId}?chatId=${newChatId}${productId ? `&product=${productId}` : ""}`,
               { replace: true },
@@ -330,12 +335,18 @@ export default function Chat() {
     setLightboxIndex(index);
   };
 
+  // Close mobile sidebar when chatId is set (i.e. conversation opened)
+  useEffect(() => {
+    if (chatId && isMobile) {
+      setMobileSidebarOpen(false);
+    }
+  }, [chatId, isMobile]);
+
   const otherParticipant = chats
     .find((c) => c._id === chatId)
     ?.participants?.find((p) => p._id !== user?._id);
   const otherUserName = otherParticipant?.name || otherUserId || "User";
   const otherAvatar = otherParticipant?.profilePicture || null;
-  const onlineStatus = otherParticipant?.online ? "online" : "offline";
 
   if (!user) return <div className="p-8 text-center">Please login to chat</div>;
   if (loading) return <LoadingSpinner />;
@@ -353,10 +364,29 @@ export default function Chat() {
 
   return (
     <div className="flex h-[calc(100vh-72px)] bg-gray-100 dark:bg-gray-900">
+      {/* Sidebar overlay (mobile) */}
+      {isMobile && mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
       {/* Chat List Sidebar */}
-      <div className="w-80 bg-white dark:bg-gray-800 border-r flex flex-col shadow-md">
-        <div className="p-4 border-b dark:border-gray-700">
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-gray-800 border-r flex flex-col shadow-md transition-transform duration-300 ${
+          isMobile && !mobileSidebarOpen ? "-translate-x-full" : "translate-x-0"
+        } md:relative md:translate-x-0`}
+      >
+        <div className="p-4 border-b flex justify-between items-center">
           <h2 className="font-semibold">Messages</h2>
+          {isMobile && (
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="text-gray-500"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto">
           <ChatList chats={chats} loading={chatsLoading} />
@@ -364,7 +394,15 @@ export default function Chat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col w-full">
+        {isMobile && !chatId && (
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="absolute top-4 left-4 z-10 bg-blue-600 text-white p-2 rounded-full shadow-md"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         {showPlaceholder ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-4">
@@ -374,6 +412,14 @@ export default function Chat() {
             <p className="text-gray-500 max-w-sm">
               Select a conversation or start a new chat from a product page.
             </p>
+            {isMobile && (
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
+              >
+                Open Conversations
+              </button>
+            )}
           </div>
         ) : isLoadingMessages ? (
           <div className="flex-1 flex items-center justify-center">
@@ -386,32 +432,33 @@ export default function Chat() {
         ) : (
           <>
             {/* Chat Header */}
-            <div className="bg-white dark:bg-gray-800 border-b p-4 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold overflow-hidden">
-                  {otherAvatar ? (
-                    <img
-                      src={getImageUrl(otherAvatar)}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    otherUserName.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{otherUserName}</h3>
-                  <p className="text-xs text-green-500 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>{" "}
-                    {isConnected ? "Online" : "Offline"}
-                  </p>
-                </div>
+            <div className="bg-white dark:bg-gray-800 border-b p-4 flex items-center gap-3 shadow-sm">
+              {isMobile && (
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="text-gray-500"
+                >
+                  ←
+                </button>
+              )}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold overflow-hidden">
+                {otherAvatar ? (
+                  <img
+                    src={getImageUrl(otherAvatar)}
+                    className="w-full h-full object-cover"
+                    alt="avatar"
+                  />
+                ) : (
+                  otherUserName.charAt(0).toUpperCase()
+                )}
               </div>
-              <button
-                onClick={() => navigate("/chat")}
-                className="text-gray-500 md:hidden"
-              >
-                ✕
-              </button>
+              <div>
+                <h3 className="font-semibold">{otherUserName}</h3>
+                <p className="text-xs text-green-500 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full inline-block"></span>{" "}
+                  {isConnected ? "Online" : "Offline"}
+                </p>
+              </div>
             </div>
 
             {/* Messages Container */}

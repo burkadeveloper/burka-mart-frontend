@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    proxy: { "/api": "https://burka-mart-api.onrender.com" },
+    // proxy: { "/api": "https://burka-mart-api.onrender.com" },
   },
 });

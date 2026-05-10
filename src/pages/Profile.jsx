@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import {
   useProfile,
@@ -26,15 +26,17 @@ import {
 import toast from "react-hot-toast";
 
 export default function Profile() {
-  // ========== ALL HOOKS (unconditional) ==========
   const { user: authUser } = useSelector((state) => state.auth);
-  const { data, isLoading: profileLoading } = useProfile();
+  const {
+    data,
+    isLoading: profileLoading,
+    isFetching: profileFetching,
+  } = useProfile();
   const { data: walletData, isLoading: walletLoading } = useWallet();
   const updateProfile = useUpdateProfile();
   const updatePassword = useUpdatePassword();
   const uploadPicture = useUploadProfilePicture();
 
-  // State hooks
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -52,9 +54,12 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [showSellerModal, setShowSellerModal] = useState(false);
 
-  // Effect – MUST BE BEFORE EARLY RETURN
+  // Ref to prevent form reset after the first data load
+  const initialLoadDone = useRef(false);
+
+  // Reset form only once when data arrives for the first time
   useEffect(() => {
-    if (data?.user) {
+    if (data?.user && !initialLoadDone.current) {
       const profile = data.user;
       setForm({
         name: profile.name || "",
@@ -62,53 +67,77 @@ export default function Profile() {
         city: profile.location?.city || "",
         subCity: profile.location?.subCity || "",
       });
+      initialLoadDone.current = true;
     }
   }, [data]);
-
-  // ========== EARLY RETURN (after all hooks) ==========
-  if (profileLoading || walletLoading) return <LoadingSpinner />;
 
   const profile = data?.user;
   const wallet = walletData?.wallet;
 
-  // ========== HANDLERS ==========
-  const profilePictureUrl = profile?.profilePicture
-    ? `http://localhost:5000${profile.profilePicture}`
-    : "/default-avatar.png";
+  const profilePictureUrl = useMemo(() => {
+    return profile?.profilePicture
+      ? `http://localhost:5000${profile.profilePicture}`
+      : "/default-avatar.png";
+  }, [profile?.profilePicture]);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    setPreview(URL.createObjectURL(file));
-    await uploadPicture.mutateAsync(file);
-    setUploading(false);
-  };
+  const handleFileChange = useCallback(
+    async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setUploading(true);
+      setPreview(URL.createObjectURL(file));
+      try {
+        await uploadPicture.mutateAsync(file);
+        // After successful upload, clear the preview blob to show the new server image
+        setPreview(null);
+      } catch (error) {
+        toast.error("Upload failed");
+        setPreview(null);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [uploadPicture],
+  );
 
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    await updateProfile.mutateAsync({
-      name: form.name,
-      phone: form.phone,
-      location: { city: form.city, subCity: form.subCity },
-    });
-    setIsEditing(false);
-  };
+  const handleProfileSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      await updateProfile.mutateAsync({
+        name: form.name,
+        phone: form.phone,
+        location: { city: form.city, subCity: form.subCity },
+      });
+      setIsEditing(false);
+      toast.success("Profile updated");
+    },
+    [form, updateProfile],
+  );
 
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    if (passwords.new !== passwords.confirm) {
-      toast.error("New passwords do not match");
-      return;
-    }
-    await updatePassword.mutateAsync({
-      currentPassword: passwords.current,
-      newPassword: passwords.new,
-    });
-    setPasswords({ current: "", new: "", confirm: "" });
-  };
+  const handlePasswordSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (passwords.new !== passwords.confirm) {
+        toast.error("New passwords do not match");
+        return;
+      }
+      await updatePassword.mutateAsync({
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
+      });
+      setPasswords({ current: "", new: "", confirm: "" });
+      toast.success("Password changed");
+    },
+    [passwords, updatePassword],
+  );
 
-  // ========== JSX ==========
+  // Combined loading state only for the very first load
+  const isInitialLoading = profileLoading || walletLoading;
+
+  if (isInitialLoading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -177,19 +206,31 @@ export default function Profile() {
               <div className="mt-6 flex flex-col gap-2">
                 <button
                   onClick={() => setActiveTab("profile")}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+                    activeTab === "profile"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   <User size={18} /> Profile
                 </button>
                 <button
                   onClick={() => setActiveTab("security")}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${activeTab === "security" ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+                    activeTab === "security"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   <Lock size={18} /> Security
                 </button>
                 <button
                   onClick={() => setActiveTab("wallet")}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${activeTab === "wallet" ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+                    activeTab === "wallet"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   <Wallet size={18} /> Wallet
                 </button>
@@ -246,7 +287,9 @@ export default function Profile() {
                             setForm({ ...form, name: e.target.value })
                           }
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg p-2 ${!isEditing ? "bg-gray-50" : ""}`}
+                          className={`w-full border rounded-lg p-2 ${
+                            !isEditing ? "bg-gray-50" : ""
+                          }`}
                         />
                       </div>
                       <div>
@@ -271,7 +314,9 @@ export default function Profile() {
                             setForm({ ...form, phone: e.target.value })
                           }
                           disabled={!isEditing}
-                          className={`w-full border rounded-lg p-2 ${!isEditing ? "bg-gray-50" : ""}`}
+                          className={`w-full border rounded-lg p-2 ${
+                            !isEditing ? "bg-gray-50" : ""
+                          }`}
                         />
                       </div>
                       <div className="grid md:grid-cols-2 gap-4">
@@ -286,7 +331,9 @@ export default function Profile() {
                               setForm({ ...form, city: e.target.value })
                             }
                             disabled={!isEditing}
-                            className={`w-full border rounded-lg p-2 ${!isEditing ? "bg-gray-50" : ""}`}
+                            className={`w-full border rounded-lg p-2 ${
+                              !isEditing ? "bg-gray-50" : ""
+                            }`}
                           />
                         </div>
                         <div>
@@ -300,7 +347,9 @@ export default function Profile() {
                               setForm({ ...form, subCity: e.target.value })
                             }
                             disabled={!isEditing}
-                            className={`w-full border rounded-lg p-2 ${!isEditing ? "bg-gray-50" : ""}`}
+                            className={`w-full border rounded-lg p-2 ${
+                              !isEditing ? "bg-gray-50" : ""
+                            }`}
                           />
                         </div>
                       </div>
@@ -402,7 +451,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Seller Request Modal */}
       {showSellerModal && (
         <SellerRequestModal onClose={() => setShowSellerModal(false)} />
       )}

@@ -3,18 +3,16 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useLogin } from "../api/authApi";
 import { setCredentials } from "../features/authSlice";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
   Lock,
   LogIn,
   Eye,
   EyeOff,
-  ShoppingBag,
-  Truck,
-  Shield,
-  Headphones,
-  Star,
+  ShieldCheck,
+  ChevronLeft,
+  Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../api/axiosClient";
@@ -23,7 +21,6 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [resendEmail, setResendEmail] = useState("");
   const [showResend, setShowResend] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -36,254 +33,225 @@ export default function Login() {
     try {
       const data = await login(form);
       dispatch(setCredentials({ user: data.user, token: data.token }));
-      toast.success("Welcome back!");
+      toast.success("Welcome back to Marketplace");
       navigate("/");
     } catch (err) {
       if (err.response?.data?.message?.includes("verify your email")) {
-        setResendEmail(form.email);
         setShowResend(true);
-        toast.error(
-          "Email not verified. Check your inbox or request a new link.",
-        );
+        toast.error("Email verification required.");
       }
     }
   };
 
   const handleResend = async () => {
     try {
-      await api.post("/auth/resend-verification", { email: resendEmail });
-      toast.success("Verification email resent. Please check your inbox.");
+      await api.post("/auth/resend-verification", { email: form.email });
+      toast.success("Verification link sent to your inbox.");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to resend");
     }
   };
 
-  const features = [
-    {
-      icon: ShoppingBag,
-      title: "Thousands of Products",
-      desc: "Shop from a wide variety of categories",
-    },
-    {
-      icon: Truck,
-      title: "Fast Delivery",
-      desc: "Nationwide shipping with tracking",
-    },
-    {
-      icon: Shield,
-      title: "Secure Payments",
-      desc: "Protected by Chapa payment gateway",
-    },
-    {
-      icon: Headphones,
-      title: "24/7 Support",
-      desc: "Dedicated customer service team",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Abebe K.",
-      role: "Buyer",
-      text: "Amazing platform! Found exactly what I needed.",
-    },
-    {
-      name: "Tigist M.",
-      role: "Seller",
-      text: "I’ve sold over 500 items here. Highly recommended!",
-    },
-  ];
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl w-full mx-auto">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          {/* Left Column – Promotional Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-8"
-          >
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                Welcome to <span className="text-blue-600">Marketplace</span>
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-3 text-lg">
-                Ethiopia's leading platform to buy and sell with confidence.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {features.map((feature, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <feature.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {feature.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-6 pt-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  10K+
-                </p>
-                <p className="text-xs text-gray-500">Happy Customers</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  500+
-                </p>
-                <p className="text-xs text-gray-500">Trusted Sellers</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  4.8★
-                </p>
-                <p className="text-xs text-gray-500">Average Rating</p>
-              </div>
-            </div>
-            <div className="space-y-3 pt-4">
-              {testimonials.map((t, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
-                >
-                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                  <span>
-                    “{t.text}” – {t.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+    <div className="min-h-screen flex bg-white dark:bg-gray-950">
+      {/* --- LEFT SIDE: THE BRAND EXPERIENCE --- */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gray-900"
+      >
+        {/* Real lifestyle background image */}
+        <img
+          src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80"
+          alt="Luxury Retail"
+          className="absolute inset-0 w-full h-full object-cover opacity-50"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-gray-900/40 to-transparent" />
 
-          {/* Right Column – Login Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
+        <div className="relative z-10 w-full p-16 flex flex-col justify-between">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-white font-bold text-2xl tracking-tighter"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-6 text-center">
-              <h2 className="text-2xl font-bold text-white">Sign In</h2>
-              <p className="text-blue-100 mt-1">Access your account</p>
+            <div className="bg-blue-600 p-2 rounded-xl">
+              <Sparkles size={24} />
             </div>
+            MARKETPLACE
+          </Link>
+
+          <div>
+            <h2 className="text-5xl font-extrabold text-white leading-tight mb-6">
+              Connect with the <br />
+              <span className="text-blue-400 font-serif italic">
+                heart of commerce
+              </span>{" "}
+              <br />
+              in Ethiopia.
+            </h2>
+            <div className="flex gap-8">
+              <div>
+                <p className="text-3xl font-bold text-white">10k+</p>
+                <p className="text-blue-200/60 text-sm uppercase tracking-widest">
+                  Active Buyers
+                </p>
+              </div>
+              <div className="w-px h-12 bg-white/20" />
+              <div>
+                <p className="text-3xl font-bold text-white">500+</p>
+                <p className="text-blue-200/60 text-sm uppercase tracking-widest">
+                  Verified Sellers
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-white/60 text-sm">
+            <ShieldCheck className="text-blue-400" size={20} />
+            Secure transaction environment powered by Chapa
+          </div>
+        </div>
+      </motion.div>
+
+      {/* --- RIGHT SIDE: THE FORM --- */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-gray-50 dark:bg-gray-950">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          {/* Mobile Logo */}
+          <Link
+            to="/"
+            className="lg:hidden flex items-center gap-2 mb-12 text-gray-900 dark:text-white font-bold text-xl"
+          >
+            <ChevronLeft size={20} /> Back to Store
+          </Link>
+
+          <header className="mb-10">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              Enter your credentials to access your account.
+            </p>
+          </header>
+
+          <AnimatePresence>
             {verificationRequired && (
-              <div className="bg-green-50 dark:bg-green-900/20 p-3 text-center text-green-700 dark:text-green-300 text-sm">
-                Registration successful! Please check your email to verify your
-                account.
-              </div>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-400 text-sm flex gap-3"
+              >
+                <ShieldCheck size={20} />
+                <p>
+                  Registration successful! Please check your email for the
+                  verification link.
+                </p>
+              </motion.div>
             )}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                    placeholder="you@example.com"
-                    required
-                  />
-                </div>
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">
+                Email Address
+              </label>
+              <div className="relative group">
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                  size={20}
+                />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white"
+                  placeholder="name@company.com"
+                  required
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={form.password}
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
-                    }
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                    placeholder="••••••••"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                    Remember me
-                  </span>
-                </label>
-                <a href="#" className="text-sm text-blue-600 hover:underline">
-                  Forgot password?
+                <a
+                  href="#"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-tighter"
+                >
+                  Forgot Password?
                 </a>
               </div>
-              {showResend && (
-                <div className="text-center text-sm">
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    className="text-blue-600 underline"
-                  >
-                    Resend verification email
-                  </button>
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition shadow-md disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <LogIn size={18} /> Sign In
-                  </>
-                )}
-              </button>
-            </form>
-            <div className="px-6 pb-6 text-center">
-              <p className="text-gray-600 dark:text-gray-400">
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="text-blue-600 hover:underline font-medium"
+              <div className="relative group">
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                  size={20}
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                  className="w-full pl-12 pr-12 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 dark:text-white"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
                 >
-                  Create one
-                </Link>
-              </p>
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
-          </motion.div>
-        </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gray-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl shadow-gray-200 dark:shadow-none hover:bg-gray-800 dark:hover:bg-blue-700 transition-all flex items-center justify-center gap-3 disabled:opacity-70 group"
+            >
+              {isLoading ? (
+                <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Sign In{" "}
+                  <LogIn
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </>
+              )}
+            </button>
+
+            {showResend && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={handleResend}
+                className="w-full text-center text-sm font-bold text-blue-600 hover:underline"
+              >
+                Resend verification email
+              </motion.button>
+            )}
+          </form>
+
+          <footer className="mt-12 text-center">
+            <p className="text-gray-500 dark:text-gray-400">
+              New to Marketplace?{" "}
+              <Link
+                to="/register"
+                className="text-gray-900 dark:text-white font-bold hover:underline"
+              >
+                Create an account
+              </Link>
+            </p>
+          </footer>
+        </motion.div>
       </div>
     </div>
   );
